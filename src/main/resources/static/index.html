@@ -10,9 +10,67 @@
     <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/css/bootstrap.min.css"/>
     <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/webjars/js-cookie/js.cookie.js"></script>
 </head>
-<body>
-<h1>Demo</h1>
-<div class="container"></div>
+<body style="background-color: darkslategray; color: aliceblue">
+<div class="col-4"></div>
+<div class="container col-2" style="border: 3px solid white; border-radius: 15px; margin-top: 20px">
+    <div class="container unauthenticated col justify-content-center">
+        <div>
+            <br>
+             <a href="/oauth2/authorization/github"><button class="btn btn-success"><h5>Login with GitHub</h5></button></a>
+        </div>
+        <br>
+        <div>
+             <a href="/oauth2/authorization/google"><button class="btn btn-primary"><h5>Login with Google</h5></button></a>
+        </div>
+    </div>
+    <div class="container authenticated" style="display: none">
+        <br>
+        <span id="user"></span> <br><em style="font-size: smaller"> is currently logged in.</em>
+        <div>
+            <hr style="background-color: aliceblue">
+            <button onClick="logout()" class="btn btn-danger"><h5>Logout</h5></button>
+        </div>
+    </div>
+    <br>
+    <div class="container text-danger error"></div>
+</div>
+<div class="col-4"></div>
+<script type="text/javascript">
+    $.get("/user", function(data) {
+        $("#user").html(data.name);
+        $(".unauthenticated").hide()
+        $(".authenticated").show()
+    });
+    $.get("/error", function(data) {
+        if (data) {
+            $(".error").html(data);
+        } else {
+            $(".error").html('');
+        }
+    });
+    const logout = function () {
+        $.post("/logout", function () {
+            $("#user").html('');
+            $(".unauthenticated").show();
+            $(".authenticated").hide();
+        })
+        return true;
+    };
+    $.ajaxSetup({
+        beforeSend : function(xhr, settings) {
+            if (settings.type == 'POST' || settings.type == 'PUT'
+                || settings.type == 'DELETE') {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/
+                    .test(settings.url))) {
+                    // Only send the token to relative URLs i.e. locally.
+                    xhr.setRequestHeader("X-XSRF-TOKEN",
+                        Cookies.get('XSRF-TOKEN'));
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>
